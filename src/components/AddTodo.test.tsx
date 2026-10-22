@@ -5,6 +5,11 @@ import AddTodo from "./AddTodo";
 describe("AddTodo", () => {
   const inputTestId = "task-input-field";
 
+  test("should have an accessible name for the task input", () => {
+    render(<AddTodo />);
+    expect(screen.getByRole("textbox", { name: "Task title" })).toBeInTheDocument();
+  });
+
   test("should have placeholder text", () => {
     render(<AddTodo />);
     const input = screen.getByTestId(inputTestId);
