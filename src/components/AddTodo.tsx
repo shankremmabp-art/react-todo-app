@@ -55,6 +55,7 @@ export default function AddTodo() {
           ref={inputRef}
           name="task-title"
           type="text"
+          aria-label="Task title"
           placeholder="Add task..."
           value={title}
           onChange={(evt) => {
