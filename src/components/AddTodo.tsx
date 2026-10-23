@@ -11,7 +11,7 @@ export default function AddTodo() {
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { addTodo } = useContext(TodoContext);
+  const { addTodo, todoItems } = useContext(TodoContext);
 
   const onSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
     // Stop form being submitted to same file and reloading the page
@@ -27,6 +27,16 @@ export default function AddTodo() {
 
     if (title.length > TASK_TITLE_MAX_LENGTH) {
       setError(`Task must be ${TASK_TITLE_MAX_LENGTH} characters or fewer.`);
+      inputRef.current?.focus();
+      return;
+    }
+
+    const normalizedTitle = trimmedTitle.toLocaleLowerCase();
+    const duplicateExists = todoItems.some(
+      (todoItem) => todoItem.title.trim().toLocaleLowerCase() === normalizedTitle,
+    );
+    if (duplicateExists) {
+      setError("A task with this name already exists. Please choose a different name.");
       inputRef.current?.focus();
       return;
     }
