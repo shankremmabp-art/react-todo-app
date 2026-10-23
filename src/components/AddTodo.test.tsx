@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 
+import { initialState, TodoContext } from "../context/TodoContext";
 import AddTodo from "./AddTodo";
 
 describe("AddTodo", () => {
@@ -57,5 +58,30 @@ describe("AddTodo", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Task must be 500 characters or fewer.",
     );
+  });
+
+  test("rejects duplicate task names regardless of case or surrounding spaces", () => {
+    const addTodo = vi.fn();
+    render(
+      <TodoContext.Provider
+        value={{
+          ...initialState,
+          todoItems: [{ id: "1", title: "Buy groceries", completed: false }],
+          addTodo,
+        }}
+      >
+        <AddTodo />
+      </TodoContext.Provider>,
+    );
+
+    fireEvent.change(screen.getByTestId(inputTestId), {
+      target: { value: "  BUY GROCERIES  " },
+    });
+    fireEvent.submit(screen.getByTestId("task-form"));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "A task with this name already exists. Please choose a different name.",
+    );
+    expect(addTodo).not.toHaveBeenCalled();
   });
 });

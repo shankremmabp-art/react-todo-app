@@ -19,52 +19,48 @@ describe("TodosList filters", () => {
 
   test("shows all tasks by default", () => {
     renderTodos();
-
     const list = screen.getByTestId("todos-list");
-    expect(within(list).getByText("Write report")).toBeInTheDocument();
-    expect(within(list).getByText("Review pull request")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(within(list).getByText("Write report")).toBeVisible();
+    expect(within(list).getByText("Review pull request")).toBeVisible();
+    expect(screen.getByRole("button", { name: "All" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("shows only active tasks when Active is selected", () => {
+  test("hides completed tasks when Active is selected", () => {
     renderTodos();
-
     fireEvent.click(screen.getByRole("button", { name: "Active" }));
-
     const list = screen.getByTestId("todos-list");
-    expect(within(list).getByText("Write report")).toBeInTheDocument();
-    expect(within(list).queryByText("Review pull request")).not.toBeInTheDocument();
+    expect(within(list).getByText("Write report")).toBeVisible();
+    expect(within(list).getByText("Review pull request").closest("li")).not.toBeVisible();
   });
 
-  test("shows only completed tasks when Completed is selected", () => {
+  test("hides active tasks when Completed is selected", () => {
     renderTodos();
+    fireEvent.click(screen.getByRole("button", { name: "Completed" }));
+    const list = screen.getByTestId("todos-list");
+    expect(within(list).getByText("Review pull request")).toBeVisible();
+    expect(within(list).getByText("Write report").closest("li")).not.toBeVisible();
+  });
+
+  test("preserves an in-progress edit when its task is filtered out", () => {
+    renderTodos();
+    fireEvent.click(within(screen.getByTestId("todos-list")).getAllByRole("button", { name: "Edit todo" })[0]);
+    const editInput = screen.getByRole("textbox", { name: "Edit todo title" });
+    fireEvent.change(editInput, { target: { value: "Updated report title" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Completed" }));
 
-    const list = screen.getByTestId("todos-list");
-    expect(within(list).getByText("Review pull request")).toBeInTheDocument();
-    expect(within(list).queryByText("Write report")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Edit todo title" })).toHaveValue("Updated report title");
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(screen.getByRole("textbox", { name: "Edit todo title" })).toHaveValue("Updated report title");
   });
 
-  test("shows a helpful message when the selected filter has no matches", () => {
+  test("announces when the selected filter has no matches", () => {
     render(
-      <TodoContext.Provider
-        value={{
-          ...initialState,
-          todoItems: [{ id: "1", title: "Finished task", completed: true }],
-        }}
-      >
+      <TodoContext.Provider value={{ ...initialState, todoItems: [{ id: "1", title: "Finished task", completed: true }] }}>
         <TodosList />
       </TodoContext.Provider>,
     );
-
     fireEvent.click(screen.getByRole("button", { name: "Active" }));
-
-    expect(screen.getByTestId("empty-todos-message")).toHaveTextContent(
-      "No active tasks.",
-    );
+    expect(screen.getByRole("status")).toHaveTextContent("No active tasks.");
   });
 });
